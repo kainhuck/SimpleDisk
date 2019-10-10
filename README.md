@@ -46,6 +46,10 @@ pip3 install tornado
 
 
 
+***项目所用的模板请看[这里](https://github.com/kainhuck/tornado_project_template_for_vue)***
+
+
+
 ### 如果您对这个项目有兴趣，欢迎加入
 
 **联系我**

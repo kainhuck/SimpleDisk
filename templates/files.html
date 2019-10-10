@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="{{static_url('css/bootstrap.min.css')}}">
+    <script src="{{static_url('js/vue.js')}}"></script>
+    <script src="{{static_url('js/vue-resource-1.3.4.js')}}"></script>
+    <script src="{{static_url('js/jquery.min.js')}}"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <title>Hello, world!</title>
+    <style>
+        .v-enter,
+        .v-leave-to {
+            opacity: 0;
+
+        }
+
+        .v-enter-active,
+        .v-leave-active {
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- 导航栏 -->
+        <nav class="navbar navbar-expand navbar-light bg-light">
+            <ul class="nav navbar-nav">
+                <li class="nav-item active">
+                    <a class="nav-link" href="#" @click="comName='home'">Home <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" @click="comName='showfiles'">文件</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" @click="comName='info'">Info</a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- 组件展示区 -->
+        <!-- 先出后进 -->
+        <transition mode="out-in">
+            <component :is="comName"></component>
+        </transition>
+
+    </div>
+
+    <!-- ----------------------------------------------------------------------- -->
+
+    <!-- home组件 -->
+    <template id="home">
+        <div>
+            <div class="container">
+                <!-- 标题 -->
+                <div class="text-center my-3">
+                    <h2 class="text-primary">欢迎使用SimpleDisk远程文件管理系统</h2>
+                </div>
+
+                <!-- 内容 -->
+                <p class="text-secondary my-3">该系统本着简单但的初心，提供尽量完整的服务制作而成，作者能力有限欢迎前端大佬加入</p>
+
+                <!-- 结束 -->
+                <div class="my-5">
+                    <p class="text-warning">项目开源在<span><a href="#">GitHub</a></span></p>
+                </div>
+            </div>
+    </template>
+
+    <!-- showfiles组件 -->
+    <template id="showfiles">
+        <div>
+            <!-- 菜单栏 -->
+            <nav class="navbar navbar-expand navbar-dark bg-dark">
+                <div class="nav navbar-nav">
+                    <a class="nav-item nav-link active" href="#" @click="chooseFile()">选择 <span
+                            class="sr-only">(current)</span></a>
+                    <a class="nav-item nav-link" href="#" @click="downloadFile()">下载</a>
+                    <a class="nav-item nav-link" href="#" data-toggle="modal" data-target="#postFileModal">上传</a>
+                    <a class="nav-item nav-link" href="#" data-toggle="modal" data-target="#createFileModal">新建文件夹</a>
+                    <a class="nav-item nav-link" href="#" @click="deleteFile()">删除</a>
+                    <a class="nav-item nav-link" href="#" @click="refresh()">刷新</a>
+                </div>
+            </nav>
+
+            <!-- 文件视图 -->
+            <!-- 返回上级目录 -->
+            <form v-for="item in fileList">
+                <a href="#" v-if="item.type=='diu'" @click.prenvent="getFileList(nowDir+'/'+item.filename)">
+                    <img src="{{static_url('img/Folder.png')}}" alt="返回上级">&nbsp;{[ item.filename ]}
+                </a>
+            </form>
+            <!-- 普通文件夹目录 -->
+            <form v-for="item in fileList">
+                <input type="checkbox" v-model="checkFile" v-show="checkboxShow"
+                    :value="nowDir+'/'+item.filename+item.type" v-if="item.type=='dir'">
+                <a href="#" v-if="item.type=='dir'" @click.prenvent="getFileList(nowDir+'/'+item.filename)">
+                    <img src="{{static_url('img/Folder.png')}}" alt="文件夹">&nbsp;{[ item.filename ]}
+                </a>
+            </form>
+            <!-- 普通文件 -->
+            <form v-for="item in fileList">
+                <input type="checkbox" v-model="checkFile" v-show="checkboxShow"
+                    :value="nowDir+'/'+item.filename+item.type" v-if="item.type=='file'">
+                <a v-if="item.type=='file'">
+                    <img src="{{static_url('img/file.png')}}" alt="文件">&nbsp;{[ item.filename ]}
+                </a>
+            </form>
+
+
+            <!-- 要弹出的新建文件夹输入框（模态框） -->
+            <div class="modal fade" id="createFileModal" role="dialog" aria-labelledby="exampleModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="createFileTitle">创建文件</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form>
+                                <div class="form-group">
+                                    <label for="fileName" class="col-form-label">文件夹名称</label>
+                                    <input type="text" autofocus class="form-control" id="fileName"
+                                        v-model="newFolderName">
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" id="createFileSureBut" data-dismiss="modal"
+                                @click="createNewfolder()">确定</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 要弹出的上传文件模态框 -->
+            <div class="modal fade" id="postFileModal" role="dialog" aria-labelledby="exampleModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="createFileTitle">上传文件</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+
+                            <el-upload :action="uploadApi" :data="uploadData()">
+                                <el-button size="small" type="primary">点击上传</el-button>
+                            </el-upload>
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" id="createFileSureBut" data-dismiss="modal" @click="refresh()">
+                                确定
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </template>
+
+    <!-- Info组件 -->
+    <template id="info">
+        <div>
+            info
+            磁盘容量等其他信息,正在开发中...
+        </div>
+    </template>
+
+    <!-- --------------------------------------------------------------------------->
+    <script>
+
+        var vm = new Vue({
+            el: "#app",
+            data: {
+                comName: "home",
+            },
+            method: {},
+            components: {
+                home: {
+                    template: "#home"
+                },
+                showfiles: {
+                    template: "#showfiles",
+                    data() {
+                        return {
+                            fileList: [],
+                            rootPath: "/SimpTestDir",
+                            nowDir: '',
+                            upDir: '',
+                            checkboxShow: false,
+                            checkFile: [],
+                            newFolderName: "",
+                            uploadApi: '/updown'
+                        }
+                    },
+                    methods: {
+                        // 测试用
+                        test() {
+                            for (file in this.checkFile) {
+                                var fileStr = this.checkFile[file]
+                                var type = fileStr[fileStr.length - 1]    // 取出最后一个判断类型
+                                if (type == "r") {
+                                    alert("暂不支持下载文件夹")
+                                } else {
+                                    // 开始下载
+                                    console.log(fileStr.substring(-1, fileStr.length - 4))
+                                }
+                            }
+                        },
+
+                        // 上传文件时的参数
+                        uploadData() {
+                            return {
+                                'dir': this.nowDir
+                            }
+                        }, 
+
+                        // 选择文件
+                        chooseFile() {
+                            this.checkboxShow = !this.checkboxShow
+                            // 如果checkboxShow为false,则取消所有的选中
+                            if (!this.checkboxShow) {
+                                this.checkFile = []
+                            }
+                        },
+
+                        // 刷新文件列表
+                        refresh() {
+                            this.getFileList(this.nowDir)
+                        },
+
+                        // 下载文件
+                        downloadFile() {
+                            // 将checkFile中的文件进行下载
+                            // console.log(this.checkFile)  
+                            if (!this.checkFile.length) {
+                                alert("请先选择文件")
+                            } else {
+                                var downloadFileList = []   // 存放要下载的文件
+                                for (file in this.checkFile) {
+                                    var fileStr = this.checkFile[file]
+                                    var type = fileStr[fileStr.length - 1]    // 取出最后一个判断类型
+                                    if (type == "r") {
+                                        alert("暂不支持下载文件夹")
+                                    } else {
+                                        // 开始下载
+                                        window.location.href = '/updown?filename=' + fileStr.substring(-1, fileStr.length - 4)
+                                        console.log(fileStr.substring(-1, fileStr.length - 4))
+                                    }
+                                }
+                                // 清空已选文件
+                                this.checkFile = []
+                                // 隐藏复选框
+                                this.checkboxShow = false
+                            }
+                        },
+
+                        // 新建文件夹
+                        createNewfolder() {
+                            if (!this.newFolderName.length) { // 文件夹名字不能为空
+                                alert("文件夹名字不能为空")
+                            } else {
+                                // 判断不能重名
+                                for (index in this.fileList) {
+                                    var file = this.fileList[index]
+                                    if (file.type == 'dir' && file.filename == this.newFolderName) {
+                                        alert("文件夹已存在")
+                                        // 清空名称
+                                        this.newFolderName = ""
+                                        return
+                                    }
+                                }
+                                // 发送创建请求
+                                this.$http.get('/fileopt?dir_path=' + this.nowDir + '/' + this.newFolderName).then(res => {
+                                    alert("创建成功")
+                                })
+
+                                // 刷新当前文件目录
+                                this.getFileList(this.nowDir)
+
+                                // 清空名称
+                                this.newFolderName = ""
+                            }
+                        },
+
+                        // 删除文件
+                        deleteFile() {
+                            if (!this.checkFile.length) {
+                                alert("请先选择文件")
+                            } else {
+                                for (file in this.checkFile) {
+                                    var fileStr = this.checkFile[file]
+                                    var type = fileStr[fileStr.length - 1]    // 取出最后一个判断类型
+                                    var deleteFileName = ""
+                                    if (type == "r") {
+                                        // 文件夹
+                                        deleteFileName = fileStr.substring(-1, fileStr.length - 3)
+                                    } else {
+                                        // 文件
+                                        deleteFileName = fileStr.substring(-1, fileStr.length - 4)
+                                    }
+                                    this.$http.delete('/fileopt?file_path=' + deleteFileName).then(res => {
+                                        // console.log(res.body)
+                                    })
+                                    // 重新请求当前路径
+                                    this.getFileList(this.nowDir)
+                                }
+                                alert("删除成功")
+                                // 清空已选文件
+                                this.checkFile = []
+
+                                // 隐藏复选框
+                                this.checkboxShow = false
+                            }
+                        },
+
+                        // 请求根目录
+                        getRootPath() {
+                            this.$http.get("/dirpath?where=rootPath").then(res => {
+                                // console.log(res.body.rootPath)
+                                this.rootPath = res.body.rootPath
+                            })
+                        },
+
+                        // 请求文件资源列表
+                        getFileList(pwd) {
+                            this.$http.get("/dirpath?where=" + pwd).then(res => {
+                                // console.log(res.body)
+                                this.fileList = res.body.files
+
+                                // 增加返回功能
+                                var tempList = pwd.split("/")
+                                // console.log(tempList)
+                                if (tempList.pop() == "..") {
+                                    this.nowDir = this.upDir
+                                    var tempList = this.nowDir.split("/")
+                                    tempList.pop()
+                                    this.upDir = tempList.join("/")
+                                } else {
+                                    this.nowDir = res.body.from
+                                    var tempList = res.body.from.split("/")
+                                    tempList.pop()
+                                    this.upDir = tempList.join("/")
+                                }
+
+                                // console.log("当前目录是：" + this.nowDir)
+                                // console.log("上一级目录是：" + this.upDir)
+                                // 如果当前不是根目录增加返回操作，用..表示文件夹名字
+                                if (this.nowDir != this.rootPath) {
+                                    this.fileList.unshift({
+                                        "filename": "..",
+                                        "type": "diu",  // 与普通文件夹区别dir up
+                                        "from": this.upDir
+                                    })
+                                }
+                            })
+                        }
+                    },
+                    created() {
+                        // 请求根目录
+                        // this.getRootPath()
+                        // console.log(this.rootPath)
+                        // 请求文件资源列表
+                        this.getFileList(this.rootPath)
+                    },
+                    delimiters: ['{[', ']}'],
+                },
+                info: {
+                    template: "#info"
+                }
+            },
+            delimiters: ['{[', ']}'],
+        })
+    </script>
+
+    <script src="{{static_url('js/popper.min.js')}}"></script>
+    <script src="{{static_url('js/bootstrap.min.js')}}"></script>
+</body>
+
+</html>

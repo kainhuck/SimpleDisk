@@ -24,7 +24,7 @@ pip3 install tornado
 ```shell
 # git clone https://github.com/kainhuck/SimpleDisk.git
 # cd SimpleDisk
-# python3 ./server.py
+# nohup python3 ./server.py > ./logs/log 2>&1 &
 ```
 
 
@@ -32,3 +32,35 @@ pip3 install tornado
 ## 访问
 
 浏览器中输入 <你的IP地址>:8000
+
+
+
+## 一些未解决的BUG
+
+作者前端功力有限（这个项目是现学现做），难免会有一些BUG，目前有这么些为完成的功能或BUG
+
+- index页面未设计，只是简单的一个入口链接
+- 下载文件时不能下载多个，如果选择多个默认下载最后一个
+- info组件暂未开发
+- 待补充...
+
+
+
+### 如果您对这个项目有兴趣，欢迎加入
+
+**联系我**
+
+> QQ :fist_right:  :one::six::two::eight::three::two::one::two::six::four:
+
+
+
+
+
+
+
+
+
+
+
+
+
